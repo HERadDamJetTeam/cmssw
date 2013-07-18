@@ -1,6 +1,6 @@
 // -*- C++ -*-
 // Original Author:  Fedor Ratnikov
-// $Id: HcalHardcodeCalibrations.cc,v 1.43 2013/04/23 16:06:26 abdullin Exp $
+// $Id: HcalHardcodeCalibrations.cc,v 1.44 2013/06/03 17:44:52 abdullin Exp $
 //
 //
 
@@ -134,6 +134,11 @@ HcalHardcodeCalibrations::HcalHardcodeCalibrations ( const edm::ParameterSet& iC
     //     std::cout << " HcalHardcodeCalibrations:  iLumi = " <<  iLumi << std::endl;
   }
 
+  //option for sipm cooling
+  sipmCooling = false; sipmCoolingFactor = 1.0;
+  if (iConfig.exists("SipmCooling")) sipmCooling = iConfig.getParameter<bool>("SipmCooling");
+  if (sipmCooling && iConfig.exists("SipmCoolingFactor")) sipmCoolingFactor = iConfig.getParameter<double>("SipmCoolingFactor");
+  
   bool relabel_=false;
   edm::ParameterSet ps0;
   if ( iConfig.exists("HcalReLabel") ) {
@@ -293,7 +298,7 @@ std::auto_ptr<HcalPedestals> HcalHardcodeCalibrations::producePedestals (const H
   std::auto_ptr<HcalPedestals> result (new HcalPedestals (topo,false));
   std::vector <HcalGenericDetId> cells = allCells(*topo);
   for (std::vector <HcalGenericDetId>::const_iterator cell = cells.begin (); cell != cells.end (); cell++) {
-    HcalPedestal item = HcalDbHardcode::makePedestal (*cell, false, iLumi);
+    HcalPedestal item = HcalDbHardcode::makePedestal (*cell, false, iLumi, sipmCooling, sipmCoolingFactor);
     result->addValues(item);
   }
   return result;
@@ -308,7 +313,7 @@ std::auto_ptr<HcalPedestalWidths> HcalHardcodeCalibrations::producePedestalWidth
   std::auto_ptr<HcalPedestalWidths> result (new HcalPedestalWidths (topo,false));
   std::vector <HcalGenericDetId> cells = allCells(*htopo);
   for (std::vector <HcalGenericDetId>::const_iterator cell = cells.begin (); cell != cells.end (); cell++) {
-    HcalPedestalWidth item = HcalDbHardcode::makePedestalWidth (*cell, iLumi);
+    HcalPedestalWidth item = HcalDbHardcode::makePedestalWidth (*cell, iLumi, sipmCooling, sipmCoolingFactor);
     result->addValues(item);
   }
   return result;

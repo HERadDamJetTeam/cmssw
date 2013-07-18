@@ -25,7 +25,7 @@ HcalPedestal HcalDbHardcode::makePedestal (HcalGenericDetId fId, bool fSmear) {
 }
 
 
-HcalPedestal HcalDbHardcode::makePedestal (HcalGenericDetId fId, bool fSmear, double lumi) {
+HcalPedestal HcalDbHardcode::makePedestal (HcalGenericDetId fId, bool fSmear, double lumi, bool sipmCooling, double sipmCoolingFactor) {
   HcalPedestalWidth width = makePedestalWidth (fId, lumi);
   //  float value0 = fId.genericSubdet() == HcalGenericDetId::HcalGenForward ? 11. : 18.;  // fC
 
@@ -47,6 +47,7 @@ HcalPedestal HcalDbHardcode::makePedestal (HcalGenericDetId fId, bool fSmear, do
     float const sensorArea(6.16); // mm^2 for 2.8mm diameter SiPM device
   
     float darkCurrent(darkCurrentPerArea*sensorArea*eff_lumi/3000.);
+	if(sipmCooling) darkCurrent *= sipmCoolingFactor;
 
     float const currentFractionToQIE(1/5.);
     float chargeToQIE(darkCurrent*25.*currentFractionToQIE); // uA*ns = fC
@@ -100,15 +101,19 @@ HcalPedestalWidth HcalDbHardcode::makePedestalWidth (HcalGenericDetId fId) {
 // while factor ~8 (~2.5 less) for HE at 3000 fb-1 
 // Tab.1.6 (p.10) and Fig. 5.7 (p.91) of HCAL Upgrade TDR  
 
-HcalPedestalWidth HcalDbHardcode::makePedestalWidth (HcalGenericDetId fId, double lumi) {
+HcalPedestalWidth HcalDbHardcode::makePedestalWidth (HcalGenericDetId fId, double lumi, bool sipmCooling, double sipmCoolingFactor) {
   float value = 0;
   double eff_lumi = lumi - 200.; // offset to account for actual putting of SiPMs into
                                  // operations
   if(eff_lumi < 0.) eff_lumi = 0.;
-  if      (fId.genericSubdet() == HcalGenericDetId::HcalGenBarrel) 
+  if      (fId.genericSubdet() == HcalGenericDetId::HcalGenBarrel){ 
     value = 5.0 + 1.7 * sqrt(eff_lumi);
-  else if (fId.genericSubdet() == HcalGenericDetId::HcalGenEndcap) 
+    if(sipmCooling) value *= sipmCoolingFactor;
+  }
+  else if (fId.genericSubdet() == HcalGenericDetId::HcalGenEndcap){ 
     value = 5.0 + 0.7 * sqrt(eff_lumi);
+    if(sipmCooling) value *= sipmCoolingFactor;
+  }
   else if (fId.genericSubdet() == HcalGenericDetId::HcalGenOuter)  value = 1.5;
   else if (fId.genericSubdet() == HcalGenericDetId::HcalGenForward)value = 2.0;
   // everything in fC
