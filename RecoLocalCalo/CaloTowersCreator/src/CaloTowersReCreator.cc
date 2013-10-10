@@ -37,8 +37,8 @@ CaloTowersReCreator::CaloTowersReCreator(const edm::ParameterSet& conf) :
         conf.getParameter<double>("MomHBDepth"),
         conf.getParameter<double>("MomHEDepth"),
         conf.getParameter<double>("MomEBDepth"),
-        conf.getParameter<double>("MomEEDepth")
-
+        conf.getParameter<double>("MomEEDepth"),
+		false,false,false,false
         ),
   caloLabel_(conf.getParameter<edm::InputTag>("caloLabel")),
   allowMissingInputs_(false)

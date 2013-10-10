@@ -6,6 +6,9 @@
 #include "Geometry/CaloGeometry/interface/CaloGeometry.h"
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 #include "Math/Interpolator.h"
+#include "CalibFormats/HcalObjects/interface/HcalCalibrations.h"
+#include "CondFormats/HcalObjects/interface/HcalPedestalWidth.h"
+#include "CondFormats/HcalObjects/interface/HcalGain.h"
 
 CaloTowersCreationAlgo::CaloTowersCreationAlgo()
  : theEBthreshold(-1000.),
@@ -64,7 +67,11 @@ CaloTowersCreationAlgo::CaloTowersCreationAlgo()
    theMomHBDepth(0.),
    theMomHEDepth(0.),
    theMomEBDepth(0.),
-   theMomEEDepth(0.)
+   theMomEEDepth(0.),
+   theAgingFlagEcal(false),
+   theAgingFlagHE(false),
+   theAgingFlagHF(false),
+   theUpgradeRecoFlag(false)
 {
 }
 
@@ -90,7 +97,11 @@ CaloTowersCreationAlgo::CaloTowersCreationAlgo(double EBthreshold, double EEthre
 					       double momHBDepth,
 					       double momHEDepth,
 					       double momEBDepth,
-					       double momEEDepth)
+					       double momEEDepth,
+						   bool doAgingEcal,
+						   bool doAgingHE,
+						   bool doAgingHF,
+						   bool doUpgradeReco)
 
   : theEBthreshold(EBthreshold),
     theEEthreshold(EEthreshold),
@@ -144,7 +155,11 @@ CaloTowersCreationAlgo::CaloTowersCreationAlgo(double EBthreshold, double EEthre
     theMomHBDepth(momHBDepth),
     theMomHEDepth(momHEDepth),
     theMomEBDepth(momEBDepth),
-    theMomEEDepth(momEEDepth)
+    theMomEEDepth(momEEDepth),
+	theAgingFlagEcal(doAgingEcal),
+	theAgingFlagHE(doAgingHE),
+	theAgingFlagHF(doAgingHF),
+	theUpgradeRecoFlag(doUpgradeReco)
 
 {
 }
@@ -178,7 +193,11 @@ CaloTowersCreationAlgo::CaloTowersCreationAlgo(double EBthreshold, double EEthre
        double momHBDepth,
        double momHEDepth,
        double momEBDepth,
-       double momEEDepth)
+       double momEEDepth,
+	   bool doAgingEcal,
+       bool doAgingHE,
+       bool doAgingHF,
+	   bool doUpgradeReco)
 
   : theEBthreshold(EBthreshold),
     theEEthreshold(EEthreshold),
@@ -232,7 +251,11 @@ CaloTowersCreationAlgo::CaloTowersCreationAlgo(double EBthreshold, double EEthre
     theMomHBDepth(momHBDepth),
     theMomHEDepth(momHEDepth),
     theMomEBDepth(momEBDepth),
-    theMomEEDepth(momEEDepth)
+    theMomEEDepth(momEEDepth),
+	theAgingFlagEcal(doAgingEcal),
+	theAgingFlagHE(doAgingHE),
+	theAgingFlagHF(doAgingHF),
+	theUpgradeRecoFlag(doUpgradeReco)
 
 {
 }
@@ -423,9 +446,10 @@ void CaloTowersCreationAlgo::assignHit(const CaloRecHit * recHit) {
         
         
   // SPECIAL handling of tower 28/depth 3 --> half into tower 28 and half into tower 29
+  // or depth 4&5 for upgrade
   if (detId.det()==DetId::Hcal && 
       HcalDetId(detId).subdet()==HcalEndcap &&
-      HcalDetId(detId).depth()==3 &&
+      (HcalDetId(detId).depth()==3 || (theUpgradeRecoFlag && (HcalDetId(detId).depth()==4 || HcalDetId(detId).depth()==5) ) ) &&
       HcalDetId(detId).ietaAbs()==28) {
 
     //////////////////////////////    unsigned int chStatusForCT = hcalChanStatusForCaloTower(recHit);
@@ -1015,8 +1039,17 @@ void CaloTowersCreationAlgo::getThresholdAndWeight(const DetId & detId, double &
     HcalDetId hcalDetId(detId);
     HcalSubdetector subdet = hcalDetId.subdet();
     
+    //get various hcal conditions
+    const HcalCalibrations& calibrations = theHcalConditions->getHcalCalibrations(detId);
+    const HcalPedestalWidth* pedestalwidth = theHcalConditions->getPedestalWidth(detId);
+    const HcalGain* gain = theHcalConditions->getGain(detId);
+	
     if(subdet == HcalBarrel) {
       threshold = theHBthreshold;
+      //for upgrade reco, replace threshold for SiPM pedestal widths
+      //just use CapId=0, all caps should have same value, set by HcalDbHardcode
+      if(theUpgradeRecoFlag) threshold = 4*pedestalwidth->getWidth(0)*gain->getValue(0); //convert fC -> GeV
+	  
       weight = theHBweight;
       if (weight <= 0.) {
         ROOT::Math::Interpolator my(theHBGrid,theHBWeights,ROOT::Math::Interpolation::kAKIMA);
@@ -1042,6 +1075,14 @@ void CaloTowersCreationAlgo::getThresholdAndWeight(const DetId & detId, double &
           weight = my.Eval(theHEDEScale);
         }
       }
+
+      //for upgrade reco, replace threshold for SiPM pedestal widths
+      //just use CapId=0, all caps should have same value, set by HcalDbHardcode
+      if(theUpgradeRecoFlag) threshold = 4*pedestalwidth->getWidth(0)*gain->getValue(0); //convert fC -> GeV
+	  
+      //account for aging recalibrations: multiply threshold by respcorr
+      if(theAgingFlagHE) threshold *= calibrations.respcorr();
+	  
     }
     
     else if(subdet == HcalOuter) {
@@ -1077,6 +1118,10 @@ void CaloTowersCreationAlgo::getThresholdAndWeight(const DetId & detId, double &
           weight = my.Eval(theHF2EScale);
         }
       }
+	  
+	  //account for aging recalibrations: multiply threshold by respcorr
+      if(theAgingFlagHF) threshold *= calibrations.respcorr();
+	  
     }
   }
   else {

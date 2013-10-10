@@ -136,6 +136,11 @@ calotowermaker = cms.EDProducer("CaloTowersCreator",
 
 
 # flag to allow/disallow missing inputs
-    AllowMissingInputs = cms.bool(False)
+    AllowMissingInputs = cms.bool(False),
+	
+	DoAgingEcal = cms.bool(False),
+	DoAgingHE = cms.bool(False),
+	DoAgingHF = cms.bool(False),
+	DoUpgradeReco = cms.bool(False)
     
 )
