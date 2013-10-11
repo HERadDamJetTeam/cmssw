@@ -127,8 +127,8 @@ def customise_Digi(process):
         process.simHcalDigis.useConfigZSvalues=cms.int32(1)
         process.simHcalDigis.HBlevel=cms.int32(16)
         process.simHcalDigis.HElevel=cms.int32(16)
-        process.simHcalDigis.HOlevel=cms.int32(16)
-        process.simHcalDigis.HFlevel=cms.int32(16)
+        process.simHcalDigis.HOlevel=cms.int32(8)
+        process.simHcalDigis.HFlevel=cms.int32(10)
 
     process.digitisation_step.remove(process.simHcalTriggerPrimitiveDigis)
     process.digitisation_step.remove(process.simHcalTTPDigis)
@@ -202,8 +202,8 @@ def customise_Reco(process):
     process.reconstruction_step.replace(process.hbheprereco,process.hbheUpgradeReco)
 
     process.horeco.digiLabel = "simHcalDigis" 
-    process.hbhereco.digiLabel = cms.InputTag("simHcalDigis","HBHEUpgradeDigiCollection")
-    process.hfreco.digiLabel = cms.InputTag("simHcalDigis","HBHEUpgradeDigiCollection")
+    process.hbheUpgradeReco.digiLabel = cms.InputTag("simHcalDigis","HBHEUpgradeDigiCollection")
+    process.hfUpgradeReco.digiLabel = cms.InputTag("simHcalDigis","HFUpgradeDigiCollection")
 
     process.zdcreco.digiLabel = "simHcalUnsuppressedDigis"
     process.hcalnoise.digiCollName=cms.string('simHcalDigis')
