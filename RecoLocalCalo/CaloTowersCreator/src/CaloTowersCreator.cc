@@ -7,6 +7,8 @@
 // severity level for ECAL
 #include "RecoLocalCalo/EcalRecAlgos/interface/EcalSeverityLevelAlgoRcd.h"
 #include "CommonTools/Utils/interface/StringToEnumValue.h"
+#include "CalibFormats/HcalObjects/interface/HcalDbService.h"
+#include "CalibFormats/HcalObjects/interface/HcalDbRecord.h"
 
 const std::vector<double>& 
 CaloTowersCreator::getGridValues()
@@ -83,7 +85,11 @@ CaloTowersCreator::CaloTowersCreator(const edm::ParameterSet& conf) :
         conf.getParameter<double>("MomHBDepth"),
         conf.getParameter<double>("MomHEDepth"),
         conf.getParameter<double>("MomEBDepth"),
-        conf.getParameter<double>("MomEEDepth")
+        conf.getParameter<double>("MomEEDepth"),
+        conf.getParameter<bool>("DoAgingEcal"),
+        conf.getParameter<bool>("DoAgingHE"),
+        conf.getParameter<bool>("DoAgingHF"),
+        conf.getParameter<bool>("DoUpgradeReco")
 	),
 
   hbheLabel_(conf.getParameter<edm::InputTag>("hbheInput")),
@@ -242,6 +248,11 @@ void CaloTowersCreator::produce(edm::Event& e, const edm::EventSetup& c) {
   algo_.setEbHandle(ebHandle);
   algo_.setEeHandle(eeHandle);
 
+  edm::ESHandle<HcalDbService> hcal_conditions;
+  c.get<HcalDbRecord>().get(hcal_conditions);
+  algo_.setHcalConditions(hcal_conditions);
+  
+  
   //-----------------------------------------------------------
 
 

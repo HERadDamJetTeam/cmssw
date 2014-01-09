@@ -16,7 +16,9 @@ toGet = cms.untracked.vstring('GainWidths'),
     HERecalibration = cms.bool(False),       # True for Upgrade   
     HEreCalibCutoff = cms.double(20.),       # if above is True  
     HFRecalibration = cms.bool(False),       # True for Upgrade
-    GainWidthsForTrigPrims = cms.bool(False) # True Upgrade    
+    GainWidthsForTrigPrims = cms.bool(False), # True Upgrade
+	SipmCooling = cms.bool(False),
+	SipmCoolingFactor = cms.double(0.3)
 )
 
 

@@ -23,7 +23,7 @@
 
 // need if we want to store the handles
 #include "FWCore/Framework/interface/ESHandle.h"
-
+#include "CalibFormats/HcalObjects/interface/HcalDbService.h"
 
 #include <map>
 class HcalTopology;
@@ -69,7 +69,11 @@ public:
     double momHBDepth,
     double momHEDepth,
     double momEBDepth,
-    double momEEDepth
+    double momEEDepth,
+    bool doAgingEcal,
+    bool doAgingHE,
+    bool doAgingHF,
+    bool doUpgradeReco	
     );
   
   CaloTowersCreationAlgo(double EBthreshold, double EEthreshold, 
@@ -99,7 +103,11 @@ public:
     double momHBDepth,
     double momHEDepth,
     double momEBDepth,
-    double momEEDepth
+    double momEEDepth,
+    bool doAgingEcal,
+    bool doAgingHE,
+    bool doAgingHF,
+    bool doUpgradeReco	
 );
   
   void setGeometry(const CaloTowerConstituentsMap* cttopo, const HcalTopology* htopo, const CaloGeometry* geo);
@@ -206,6 +214,8 @@ public:
   // for Chris
   GlobalPoint emShwrLogWeightPos(const std::vector<std::pair<DetId,double> >& metaContains, 
     float fracDepth, double totEmE);
+	
+  void setHcalConditions(const edm::ESHandle<HcalDbService> hcond) { theHcalConditions = hcond; }
 
 
 private:
@@ -336,7 +346,12 @@ private:
   edm::Handle<EcalRecHitCollection> theEbHandle;
   edm::Handle<EcalRecHitCollection> theEeHandle;
 
-
+  bool theAgingFlagEcal;
+  bool theAgingFlagHE;
+  bool theAgingFlagHF;
+  bool theUpgradeRecoFlag;
+  
+  edm::ESHandle<HcalDbService> theHcalConditions;
 
 };
 
