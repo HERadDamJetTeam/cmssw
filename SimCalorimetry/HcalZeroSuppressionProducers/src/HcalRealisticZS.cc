@@ -77,6 +77,8 @@ HcalRealisticZS::HcalRealisticZS(edm::ParameterSet const& conf):
 				 HOsearchTS,
 				 HFsearchTS));    
     }
+	
+	if(conf.getParameter<bool>("linearizeADC")) algo_->setLinearizeADC(true); //default = false
 
     produces<HBHEDigiCollection>();
     produces<HODigiCollection>();

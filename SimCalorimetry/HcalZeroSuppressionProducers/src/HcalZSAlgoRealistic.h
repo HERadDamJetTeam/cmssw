@@ -17,6 +17,7 @@ class HcalZSAlgoRealistic : public HcalZeroSuppressionAlgo {
 public:
   HcalZSAlgoRealistic(bool markAndPass, std::pair<int,int> HBsearchTS, std::pair<int,int> HEsearchTS, std::pair<int,int> HOsearchTS, std::pair<int,int> HFsearchTS);
   HcalZSAlgoRealistic(bool markAndPass, int levelHB, int levelHE, int levelHO, int levelHF, std::pair<int,int> HBsearchTS, std::pair<int,int> HEsearchTS, std::pair<int,int> HOsearchTS, std::pair<int,int> HFsearchTS);
+  void setLinearizeADC(bool lin) { linearizeADC = lin; }
   
 protected:
   virtual bool shouldKeep(const HBHEDataFrame& digi) const;
@@ -24,7 +25,7 @@ protected:
   virtual bool shouldKeep(const HFDataFrame& digi) const;
   virtual bool shouldKeep(const HcalUpgradeDataFrame& digi) const;
 private:
-  bool usingDBvalues; 
+  bool usingDBvalues, linearizeADC; 
   int thresholdHB_, thresholdHE_, thresholdHO_, thresholdHF_;
   std::pair<int,int> HBsearchTS_,  HEsearchTS_, HOsearchTS_, HFsearchTS_;
   bool keepMe(const HBHEDataFrame& inp, int start, int finish, int threshold, uint32_t hbhezsmask) const;
